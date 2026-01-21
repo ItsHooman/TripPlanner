@@ -1,0 +1,19 @@
+services:
+  db:
+    image: postgres:16
+    container_name: tripplanner_db
+    restart: unless-stopped
+    environment:
+      # Default local credentials (fine for dev)
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tripplanner
+    ports:
+      # Expose Postgres to your machine at localhost:5432
+      - "5432:5432"
+    volumes:
+      # Persist database data even if container restarts
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

@@ -1,0 +1,55 @@
+// Prisma generates a JS client based on this schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+// This tells Prisma you're using Postgres and where to connect
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  // cuid() gives nice unique IDs like "ck..."
+  id        String   @id @default(cuid())
+
+  // unique email means you can't create duplicates
+  email     String   @unique
+
+  // We'll store plain for now in MVP (later we hash!)
+  password  String
+
+  name      String?
+  createdAt DateTime @default(now())
+
+  // 1 user can have many trips
+  trips     Trip[]
+}
+
+model Trip {
+  id          String   @id @default(cuid())
+
+  // Title shown in UI (ex: "Amsterdam trip")
+  title       String
+
+  // Raw destination typed by user
+  destination String
+
+  // Dates for the trip
+  startDate   DateTime
+  endDate     DateTime
+
+  // Budget in dollars (you can change currency later)
+  budget      Int
+
+  // "techno" | "nature" | etc
+  vibe        String
+
+  // IMPORTANT: store the computed plan as JSON
+  planJson    Json
+
+  createdAt   DateTime @default(now())
+
+  // Foreign key: trip belongs to a user
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+}

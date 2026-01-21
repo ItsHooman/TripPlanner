@@ -26,7 +26,21 @@ const prisma = new PrismaClient({ adapter });
 
 
 // Allow requests from your React dev server
-app.use(cors({ origin: "http://localhost:5173" }));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow non-browser tools like curl/Postman (no Origin header)
+      if (!origin) return callback(null, true);
+
+      // Allow any localhost port (http://localhost:5175 etc.)
+      if (origin.startsWith("http://localhost:")) return callback(null, true);
+
+      // Block everything else
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  })
+);
 
 // Parses JSON bodies automatically (req.body becomes an object)
 app.use(express.json());
@@ -235,6 +249,39 @@ app.get("/api/trips/:id", async (req, res) => {
 
   res.json(trip);
 });
+
+// GET /api/trips?userId=...
+// Returns all trips for a user (newest first)
+app.get("/api/trips", async (req, res) => {
+  try {
+    const userId = req.query.userId;
+
+    if (!userId) {
+      return res.status(400).json({ error: "Missing userId query param" });
+    }
+
+    const trips = await prisma.trip.findMany({
+      where: { userId: String(userId) },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        title: true,
+        destination: true,
+        startDate: true,
+        endDate: true,
+        budget: true,
+        vibe: true,
+        createdAt: true,
+      },
+    });
+
+    res.json(trips);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error", message: err.message });
+  }
+});
+
 
 
 async function fetchPlaces({ lon, lat, radiusMeters, categories, limit = 10 }) {

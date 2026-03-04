@@ -30,16 +30,23 @@ const prisma = new PrismaClient({ adapter });
 
 
 // Allow requests from your React dev server
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5175",
+  process.env.FRONTEND_URL, // your Vercel domain
+].filter(Boolean);
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow non-browser tools like curl/Postman (no Origin header)
+      // Allow Postman / curl (no Origin header)
       if (!origin) return callback(null, true);
 
-      // Allow any localhost port (http://localhost:5175 etc.)
-      if (origin.startsWith("http://localhost:")) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
 
-      // Block everything else
       return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,

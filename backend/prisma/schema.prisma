@@ -4,8 +4,12 @@ generator client {
 }
 
 // This tells Prisma you're using Postgres and where to connect
+// prisma/schema.prisma
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
+  url  	    = env("DATABASE_URL")
+  // uncomment next line if you use Prisma <5.10
+  // directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 model User {

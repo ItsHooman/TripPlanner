@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getTrip } from "../api/trips";
 
+
 /**
  * TripDetailPage
  * Why:

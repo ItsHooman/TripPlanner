@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { listTrips } from "../api/trips";
-import { USER_ID } from "../config";
 
 /**
  * TripsListPage
@@ -20,7 +19,8 @@ export default function TripsListPage() {
       setError("");
 
       try {
-        const data = await listTrips(USER_ID);
+        const data = await listTrips();
+
         setTrips(data);
       } catch (err) {
         setError(err.message);

@@ -19,15 +19,21 @@ export function planTrip(payload) {
   });
 }
 
+
 /**
  * GET /api/trips?userId=...
  * returns list of trips for that user
  */
-export function listTrips(userId) {
-  return request(`/api/trips?userId=${encodeURIComponent(userId)}`, {
-    method: "GET",
-  });
+/**
+ * listTrips()
+ * WHY:
+ * - backend now knows user from JWT token
+ * - no need for query param ?userId=
+ */
+export function listTrips() {
+  return request("/api/trips", { method: "GET" });
 }
+
 
 /**
  * GET /api/trips/:id

@@ -41,7 +41,9 @@ const corsOptions = {
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error("Not allowed by CORS"));
+
+    // ✅ don’t throw — just block
+    return callback(null, false);
   },
   credentials: true,
 };

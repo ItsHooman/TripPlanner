@@ -66,14 +66,18 @@ app.get("/api/health", (req, res) => {
  * Zod schema = input validation.
  * This prevents garbage data from reaching your logic/database.
  */
-const PlanTripSchema = z.object({
-  
-  destination: z.string().min(2),
-  startDate: z.string().min(8), // ISO date string like "2026-02-10"
-  endDate: z.string().min(8),
-  budget: z.number().int().positive(),
-  vibe: z.enum(["techno", "nature", "relax", "food", "mixed"]),
-});
+const PlanTripSchema = z
+  .object({
+    destination: z.string().min(2),
+    startDate: z.string().min(8),
+    endDate: z.string().min(8),
+    budget: z.number().int().positive(),
+    vibe: z.enum(["techno", "nature", "relax", "food", "mixed"]),
+  })
+  .refine((data) => data.endDate >= data.startDate, {
+    message: "endDate must be the same or after startDate",
+    path: ["endDate"],
+  });
 
 
 /**
@@ -166,6 +170,25 @@ async function fetchWeather(latitude, longitude, timezone) {
   };
 }
 
+
+function budgetTierFromPerDay(budgetPerDay) {
+  if (budgetPerDay <= 80) return "low";
+  if (budgetPerDay <= 200) return "mid";
+  return "high";
+}
+
+function withEstPrice(places, estPrice) {
+  return (places || []).map((p) => ({ ...p, estPrice }));
+}
+
+function estimateAttractionCost(place) {
+  const cats = place?.categories || [];
+  if (cats.includes("fee")) return "$$";
+  if (cats.some((c) => c.startsWith("no_fee"))) return "free";
+  return "$";
+}
+
+
 /**
  * POST /api/trips/plan
  * Main MVP endpoint. In “real life”, this is your orchestration service.
@@ -187,6 +210,11 @@ app.post("/api/trips/plan", authMiddleware, async (req, res) => {
 
     const { destination, startDate, endDate, budget, vibe } = parsed.data;
 
+    const daysToSpend = 3;
+    const budgetPerDay = Math.max(1, Math.floor(budget / daysToSpend));
+    const tier = budgetTierFromPerDay(budgetPerDay);
+
+
     // 2) Convert destination -> lat/lon (geocoding)
     const geo = await geocodeCity(destination);
 
@@ -207,13 +235,41 @@ app.post("/api/trips/plan", authMiddleware, async (req, res) => {
     // We'll grab two “buckets”: restaurants + attractions
     // Geoapify uses category keys in `categories=` :contentReference[oaicite:8]{index=8}
     // Here are reasonable defaults (we can tune later):
-    const restaurants = await fetchPlaces({
+    // Food buckets (we fetch by type, then choose based on tier)
+    const cheapEats = await fetchPlaces({
       lon: geo.longitude,
       lat: geo.latitude,
-    radiusMeters: 5000, // 5 km
-    categories: "catering.restaurant,catering.cafe",
-    limit: 12,
+      radiusMeters: 6000,
+      categories: "catering.cafe,catering.fast_food,catering.food_court",
+      limit: 12,
     });
+
+    const midEats = await fetchPlaces({
+      lon: geo.longitude,
+      lat: geo.latitude,
+      radiusMeters: 6000,
+      categories: "catering.restaurant,catering.cafe",
+      limit: 12,
+    });
+
+    const highEats = await fetchPlaces({
+      lon: geo.longitude,
+      lat: geo.latitude,
+      radiusMeters: 6000,
+      categories: "catering.restaurant",
+      limit: 12,
+    });
+
+    const cheapEatsTagged = withEstPrice(cheapEats, "$");
+    const midEatsTagged = withEstPrice(midEats, "$$");
+    const highEatsTagged = withEstPrice(highEats, "$$$");
+
+    // ✅ restaurants returned depends on budget tier
+    let restaurants;
+    if (tier === "low") restaurants = cheapEatsTagged;
+    else if (tier === "mid") restaurants = midEatsTagged;
+    else restaurants = highEatsTagged;
+
 
     const attractions = await fetchPlaces({
         lon: geo.longitude,
@@ -222,6 +278,23 @@ app.post("/api/trips/plan", authMiddleware, async (req, res) => {
     categories: "tourism.attraction,tourism.sights",
     limit: 12,
     });
+
+    const attractionsTagged = (attractions || []).map((p) => ({
+        ...p,
+        estPrice: estimateAttractionCost(p),
+      }));
+
+      let attractionsFinal = attractionsTagged;
+
+      // low budget: prefer free/cheap attractions
+      if (tier === "low") {
+        attractionsFinal = attractionsTagged.filter(
+          (p) => p.estPrice === "free" || p.estPrice === "$"
+        );
+      }
+
+
+
 
     const vibeMatches = await fetchPlaces({
           lon: geo.longitude,
@@ -247,6 +320,9 @@ app.post("/api/trips/plan", authMiddleware, async (req, res) => {
         endDate,
         budget,
         vibe,
+        daysToSpend,
+        budgetPerDay,
+        tier,
       },
       weather: {
         // For MVP we just attach forecast arrays
@@ -255,9 +331,13 @@ app.post("/api/trips/plan", authMiddleware, async (req, res) => {
         places: {
         vibeMatches,
         restaurants,
-        attractions,
+        attractions: attractionsFinal,
+        foodBuckets: {
+          cheap: cheapEatsTagged,
+          mid: midEatsTagged,
+          high: highEatsTagged,
+        },
       },
-
       summary: `A ${vibe} trip to ${geo.name} within $${budget}. Includes weather + nearby places (MVP).`,
         nextIdeas: [
             "Add Place Details endpoint (click a place card → details)",

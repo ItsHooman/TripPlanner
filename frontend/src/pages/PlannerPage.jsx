@@ -2,6 +2,37 @@ import { useState } from "react";
 import { planTrip } from "../api/trips";
 const API_BASE = import.meta.env.VITE_API_BASE;
 
+
+function validateDates(startDate, endDate) {
+  const today = toDateInputValue(new Date());
+
+  if (startDate < today) {
+    return "Start date cannot be in the past";
+  }
+
+  if (endDate < startDate) {
+    return "End date cannot be before start date";
+  }
+
+  return "";
+}
+
+
+function toDateInputValue(d) {
+  // returns YYYY-MM-DD in local time (safe for <input type="date">)
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function addDays(date, days) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+
 /**
  * savePlaceToTrip()
  * WHY this exists:
@@ -365,10 +396,15 @@ function WeatherBlock({ daily }) {
  */
 export default function PlannerPage() {
   // Form state (what user types)
+  const today = new Date();
+  const defaultStart = addDays(today, 1); // tomorrow
+  const defaultEnd = addDays(defaultStart, 3); // 3-day trip
+  const [dateError, setDateError] = useState("");
+
   const [form, setForm] = useState({
     destination: "Amsterdam",
-    startDate: "2026-02-10",
-    endDate: "2026-02-14",
+    startDate: toDateInputValue(defaultStart),
+    endDate: toDateInputValue(defaultEnd),
     budget: 1200,
     vibe: "techno",
   });
@@ -383,12 +419,40 @@ export default function PlannerPage() {
   function onChange(e) {
     const { name, value } = e.target;
 
-    setForm((prev) => ({
-      ...prev,
-      // budget must be a Number (API expects number, not string)
-      [name]: name === "budget" ? Number(value) : value,
-    }));
-  }
+    setForm((prev) => {
+      const next = {
+        ...prev,
+        [name]:
+          name === "budget"
+            ? Number(value)
+            : name === "tripLengthDays"
+            ? Number(value)
+            : value,
+      };
+
+      const recalcEnd = () => {
+        const start = new Date(next.startDate);
+        const len = Number(next.tripLengthDays || 3);
+        const end = addDays(start, len);
+        next.endDate = toDateInputValue(end);
+      };
+
+      if (name === "startDate" || name === "tripLengthDays") {
+        recalcEnd();
+      }
+
+      if (name === "endDate") {
+        if (next.endDate < next.startDate) {
+          next.endDate = next.startDate;
+        }
+      }
+
+      const error = validateDates(next.startDate, next.endDate);
+      setDateError(error);
+
+      return next;
+    });
+}
 
   /**
    * onPlanTrip()
@@ -563,9 +627,10 @@ const itinerary = result?.planJson?.itinerary ?? {
                 className="w-full mt-1 p-2 rounded-xl bg-zinc-950/80 border border-zinc-800 text-white"
                 name="startDate"
                 type="date"
+                min={toDateInputValue(new Date())}
                 value={form.startDate}
                 onChange={onChange}
-              />
+                            />
             </div>
 
             <div>
@@ -574,9 +639,15 @@ const itinerary = result?.planJson?.itinerary ?? {
                 className="w-full mt-1 p-2 rounded-xl bg-zinc-950/80 border border-zinc-800 text-white"
                 name="endDate"
                 type="date"
+                min={form.startDate}
                 value={form.endDate}
                 onChange={onChange}
               />
+              {dateError && (
+              <div className="text-red-400 text-sm mt-1">
+                {dateError}
+              </div>
+            )}
             </div>
 
             <div className="md:col-span-2">
@@ -598,7 +669,7 @@ const itinerary = result?.planJson?.itinerary ?? {
 
           <button
             onClick={onPlanTrip}
-            disabled={loading}
+            disabled={!!dateError}
             className="px-4 py-2 rounded-xl bg-white text-black font-semibold disabled:opacity-50"
           >
             {loading ? "Planning..." : "Plan trip"}

@@ -52,6 +52,7 @@ app.use(
     credentials: true,
   })
 );
+app.options("*", cors());
 
 // Parses JSON bodies automatically (req.body becomes an object)
 app.use(express.json());
@@ -666,9 +667,6 @@ app.get("/api/auth/me", authMiddleware, async (req, res) => {
   }
 });
 
-app.get("/api/health", (req, res) => {
-  res.json({ ok: true });
-});
 
 
 // Start the server

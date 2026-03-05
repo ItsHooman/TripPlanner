@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { planTrip } from "../api/trips";
-
+const API_BASE = import.meta.env.VITE_API_BASE;
 
 /**
  * savePlaceToTrip()
@@ -17,7 +17,7 @@ import { planTrip } from "../api/trips";
  * - The updated trip object (including updated planJson)
  */
 async function savePlaceToTrip(tripId, day, place) {
-  const token = localStorage.getItem("token"); // change key if yours is different
+  const token = localStorage.getItem("token");
 
   const res = await fetch(`${API_BASE}/api/trips/${tripId}/itinerary`, {
     method: "PATCH",
@@ -36,7 +36,6 @@ async function savePlaceToTrip(tripId, day, place) {
 
   return data;
 }
-
 
 
 /**

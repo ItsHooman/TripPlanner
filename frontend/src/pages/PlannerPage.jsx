@@ -89,6 +89,31 @@ function formatDistance(meters) {
   return `${(meters / 1000).toFixed(1)} km`;
 }
 
+function bucketLabel(meters) {
+  if (meters == null) return "Unknown distance";
+  if (meters < 500) return "Nearby (<500m)";
+  if (meters < 2000) return "Walkable (0.5–2km)";
+  if (meters < 8000) return "Short ride (2–8km)";
+  return "Far (8km+)";
+}
+
+function groupByDistance(places) {
+  const groups = {
+    "Nearby (<500m)": [],
+    "Walkable (0.5–2km)": [],
+    "Short ride (2–8km)": [],
+    "Far (8km+)": [],
+    "Unknown distance": [],
+  };
+
+  for (const p of places || []) {
+    const key = bucketLabel(p?.distanceMeters);
+    groups[key].push(p);
+  }
+
+  return groups;
+}
+
 /**
  * googleMapsLink()
  * WHY:
@@ -99,6 +124,7 @@ function googleMapsLink({ lat, lon, name }) {
   const query = encodeURIComponent(name ? `${name}` : `${lat},${lon}`);
   return `https://www.google.com/maps/search/?api=1&query=${query}`;
 }
+
 
 /**
  * PlaceCard (CHILD component)
@@ -128,6 +154,7 @@ function PlaceCard({ place, onSavePlace }) {
   const lat = place?.location?.lat;
   const lon = place?.location?.lon;
 
+
   /**
    * ✅ NEW local state: selectedDay
    * WHY local state here?
@@ -151,6 +178,9 @@ function PlaceCard({ place, onSavePlace }) {
 
       {Array.isArray(place?.categories) && place.categories.length > 0 && (
         <div className="flex flex-wrap gap-2">
+        
+
+
           {place.categories.slice(0, 4).map((c) => (
             <span
               key={c}
@@ -233,34 +263,49 @@ function PlacesSection({ title, places, onSavePlace }) {
     return da - db;
   });
 
-  const visible = showAll ? sorted : sorted.slice(0, 6);
+  const groups = groupByDistance(sorted);
+
+  // For "show less", we show only the first 4 items per bucket
+  const limitPerBucket = showAll ? 999 : 4;
+
+  const totalCount = sorted.length;
 
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-xl font-bold">{title}</h2>
-        <div className="text-sm text-zinc-400">{sorted.length} found</div>
+        <div className="text-sm text-zinc-400">{totalCount} found</div>
       </div>
 
-      {sorted.length === 0 ? (
-        <div className="text-zinc-400 text-sm">
-          No results yet. Click “Plan trip”.
-        </div>
+      {totalCount === 0 ? (
+        <div className="text-zinc-400 text-sm">No results yet. Click “Plan trip”.</div>
       ) : (
         <>
-          <div className="grid md:grid-cols-2 gap-4">
-            {visible.map((p) => (
-              <PlaceCard
-                key={
-                  p.placeId || `${p.name}-${p.location?.lat}-${p.location?.lon}`
-                }
-                place={p}
-                onSavePlace={onSavePlace} // ✅ forward the handler to each card
-              />
-            ))}
-          </div>
+          {Object.entries(groups).map(([groupTitle, items]) => {
+            if (!items.length) return null;
 
-          {sorted.length > 6 && (
+            const visible = items.slice(0, limitPerBucket);
+
+            return (
+              <div key={groupTitle} className="space-y-2">
+                <div className="text-sm font-semibold text-zinc-200/80">
+                  {groupTitle} <span className="text-zinc-400">({items.length})</span>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  {visible.map((p) => (
+                    <PlaceCard
+                      key={p.placeId || `${p.name}-${p.location?.lat}-${p.location?.lon}`}
+                      place={p}
+                      onSavePlace={onSavePlace}
+                    />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+
+          {totalCount > 8 && (
             <button
               onClick={() => setShowAll((s) => !s)}
               className="px-4 py-2 rounded-xl border border-zinc-800 bg-zinc-950 text-zinc-100 font-semibold text-sm"
@@ -480,7 +525,7 @@ const itinerary = result?.planJson?.itinerary ?? {
 
     {/* ✅ Page content layer */}
     <div className="relative z-10 min-h-screen">
-      <div className="max-w-5xl mx-auto p-6 space-y-6">
+      <div className="max-w-7xl mx-auto p-6 space-y-6">
         <header className="space-y-2">
           <h1 className="text-3xl font-bold">Trip Planner</h1>
           <p className="text-zinc-200/80">

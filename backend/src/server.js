@@ -292,6 +292,8 @@ app.post("/api/trips/plan", authMiddleware, async (req, res) => {
   }
 });
 
+
+
 /**
  * GET /api/trips/:id
  * Fetch one trip from the database (useful for “shareable link” later)
@@ -387,11 +389,13 @@ async function fetchPlaces({ lon, lat, radiusMeters, categories, limit = 10 }) {
   // filter=circle:LON,LAT,RADIUS
   // (Docs + tutorial show circle filter usage) :contentReference[oaicite:5]{index=5}
   const url =
-    `https://api.geoapify.com/v2/places` +
-    `?categories=${encodeURIComponent(categories)}` +
-    `&filter=circle:${lon},${lat},${radiusMeters}` +
-    `&limit=${limit}` +
-    `&apiKey=${encodeURIComponent(apiKey)}`;
+  `https://api.geoapify.com/v2/places` +
+  `?categories=${encodeURIComponent(categories)}` +
+  `&filter=circle:${lon},${lat},${radiusMeters}` +
+  // ✅ THIS is the key for distance + sorting by distance
+  `&bias=proximity:${lon},${lat}` +
+  `&limit=${limit}` +
+  `&apiKey=${encodeURIComponent(apiKey)}`;
 
   const resp = await fetch(url);
 if (!resp.ok) {

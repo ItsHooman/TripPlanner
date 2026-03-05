@@ -19,7 +19,7 @@ import { planTrip } from "../api/trips";
 async function savePlaceToTrip(tripId, day, place) {
   const token = localStorage.getItem("token"); // change key if yours is different
 
-  const res = await fetch(`http://localhost:8090/api/trips/${tripId}/itinerary`, {
+  const res = await fetch(`${API_BASE}/api/trips/${tripId}/itinerary`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",

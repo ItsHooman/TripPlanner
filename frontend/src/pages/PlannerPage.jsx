@@ -208,6 +208,7 @@ function PlaceCard({ place, onSavePlace }) {
 
       </div>
     </div>
+    
   );
 }
 
@@ -418,214 +419,222 @@ const itinerary = result?.planJson?.itinerary ?? {
 
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-2">
-        <h1 className="text-3xl font-bold">Trip Planner</h1>
-        <p className="text-zinc-400">
-          Planner page: POST to backend → save trip → render places.
-        </p>
-      </header>
+  // ✅ -m-6 cancels App.jsx p-6 so background reaches the edges
+  <div className="relative min-h-screen overflow-hidden text-white">
+    {/* ✅ Background video (covers ENTIRE viewport) */}
+    <video
+  autoPlay
+  muted
+  loop
+  playsInline
+  preload="metadata"
+  disablePictureInPicture
+  className="fixed inset-0 -z-10 h-screen w-screen pointer-events-none"
+  style={{ objectFit: "cover", objectPosition: "center" }}
+>
+  <source
+    src="https://res.cloudinary.com/dxfwypgsp/video/upload/v1772695779/WhatsApp_Video_2026-03-05_at_02.28.41_w9rpoi.mp4"
+    type="video/mp4"
+  />
+</video>
 
-      {/* FORM CARD */}
-      <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 space-y-4">
-        <div className="grid md:grid-cols-2 gap-4">
-          <div>
-            <label className="text-sm text-zinc-400">Destination</label>
-            <input
-              className="w-full mt-1 p-2 rounded-xl bg-zinc-950 border border-zinc-800"
-              name="destination"
-              value={form.destination}
-              onChange={onChange}
-            />
+    <div className="fixed inset-0 -z-10 bg-black/65 pointer-events-none" />
+
+    {/* ✅ Page content layer */}
+    <div className="relative z-10 min-h-screen">
+      <div className="max-w-5xl mx-auto p-6 space-y-6">
+        <header className="space-y-2">
+          <h1 className="text-3xl font-bold">Trip Planner</h1>
+          <p className="text-zinc-200/80">
+            Planner page: POST to backend → save trip → render places.
+          </p>
+        </header>
+
+        {/* FORM CARD */}
+        <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 space-y-4 backdrop-blur-md">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm text-zinc-200/70">Destination</label>
+              <input
+                className="w-full mt-1 p-2 rounded-xl bg-zinc-950/80 border border-zinc-800 text-white"
+                name="destination"
+                value={form.destination}
+                onChange={onChange}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm text-zinc-200/70">Budget (USD)</label>
+              <input
+                className="w-full mt-1 p-2 rounded-xl bg-zinc-950/80 border border-zinc-800 text-white"
+                name="budget"
+                type="number"
+                value={form.budget}
+                onChange={onChange}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm text-zinc-200/70">Start date</label>
+              <input
+                className="w-full mt-1 p-2 rounded-xl bg-zinc-950/80 border border-zinc-800 text-white"
+                name="startDate"
+                type="date"
+                value={form.startDate}
+                onChange={onChange}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm text-zinc-200/70">End date</label>
+              <input
+                className="w-full mt-1 p-2 rounded-xl bg-zinc-950/80 border border-zinc-800 text-white"
+                name="endDate"
+                type="date"
+                value={form.endDate}
+                onChange={onChange}
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="text-sm text-zinc-200/70">Vibe</label>
+              <select
+                className="w-full mt-1 p-2 rounded-xl bg-zinc-950/80 border border-zinc-800 text-white"
+                name="vibe"
+                value={form.vibe}
+                onChange={onChange}
+              >
+                <option value="techno">Techno</option>
+                <option value="nature">Nature</option>
+                <option value="relax">Relax</option>
+                <option value="food">Food</option>
+                <option value="mixed">Mixed</option>
+              </select>
+            </div>
           </div>
 
-          <div>
-            <label className="text-sm text-zinc-400">Budget (USD)</label>
-            <input
-              className="w-full mt-1 p-2 rounded-xl bg-zinc-950 border border-zinc-800"
-              name="budget"
-              type="number"
-              value={form.budget}
-              onChange={onChange}
-            />
+          <button
+            onClick={onPlanTrip}
+            disabled={loading}
+            className="px-4 py-2 rounded-xl bg-white text-black font-semibold disabled:opacity-50"
+          >
+            {loading ? "Planning..." : "Plan trip"}
+          </button>
+
+          {error && (
+            <div className="text-sm text-red-200 border border-red-900/40 bg-red-950/30 rounded-xl p-3">
+              {error}
+            </div>
+          )}
+        </div>
+
+        {/* PLACES LISTS */}
+        <div className="grid lg:grid-cols-2 gap-6">
+          <PlacesSection title="Restaurants" places={restaurants} onSavePlace={onSavePlace} />
+          <PlacesSection title="Attractions" places={attractions} onSavePlace={onSavePlace} />
+        </div>
+
+        {/* ITINERARY UI */}
+        <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 space-y-4 backdrop-blur-md">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold">Your Itinerary</h2>
+            <div className="text-sm text-zinc-200/70">
+              Saved items:{" "}
+              {itinerary.day1.length + itinerary.day2.length + itinerary.day3.length}
+            </div>
           </div>
 
-          <div>
-            <label className="text-sm text-zinc-400">Start date</label>
-            <input
-              className="w-full mt-1 p-2 rounded-xl bg-zinc-950 border border-zinc-800"
-              name="startDate"
-              type="date"
-              value={form.startDate}
-              onChange={onChange}
-            />
-          </div>
+          <div className="grid md:grid-cols-3 gap-4">
+            {/* Day 1 */}
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4 space-y-3">
+              <div className="font-bold text-lg">Day 1</div>
+              {itinerary.day1.length === 0 ? (
+                <div className="text-sm text-zinc-200/70">Nothing saved yet.</div>
+              ) : (
+                <ul className="space-y-2">
+                  {itinerary.day1.map((p, idx) => (
+                    <li
+                      key={`${p.placeId || p.name}-${idx}`}
+                      className="text-sm text-zinc-100 border-b border-zinc-800 pb-2 flex items-center justify-between gap-3"
+                    >
+                      <span className="truncate">{p.name}</span>
+                      <button
+                        onClick={() => onRemovePlace(p, "day1")}
+                        className="px-2 py-1 rounded-lg border border-zinc-700 bg-zinc-950/60 text-zinc-200 text-xs hover:text-white"
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
 
-          <div>
-            <label className="text-sm text-zinc-400">End date</label>
-            <input
-              className="w-full mt-1 p-2 rounded-xl bg-zinc-950 border border-zinc-800"
-              name="endDate"
-              type="date"
-              value={form.endDate}
-              onChange={onChange}
-            />
-          </div>
+            {/* Day 2 */}
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4 space-y-3">
+              <div className="font-bold text-lg">Day 2</div>
+              {itinerary.day2.length === 0 ? (
+                <div className="text-sm text-zinc-200/70">Nothing saved yet.</div>
+              ) : (
+                <ul className="space-y-2">
+                  {itinerary.day2.map((p, idx) => (
+                    <li
+                      key={`${p.placeId || p.name}-${idx}`}
+                      className="text-sm text-zinc-100 border-b border-zinc-800 pb-2 flex items-center justify-between gap-3"
+                    >
+                      <span className="truncate">{p.name}</span>
+                      <button
+                        onClick={() => onRemovePlace(p, "day2")}
+                        className="px-2 py-1 rounded-lg border border-zinc-700 bg-zinc-950/60 text-zinc-200 text-xs hover:text-white"
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
 
-          <div className="md:col-span-2">
-            <label className="text-sm text-zinc-400">Vibe</label>
-            <select
-              className="w-full mt-1 p-2 rounded-xl bg-zinc-950 border border-zinc-800"
-              name="vibe"
-              value={form.vibe}
-              onChange={onChange}
-            >
-              <option value="techno">Techno</option>
-              <option value="nature">Nature</option>
-              <option value="relax">Relax</option>
-              <option value="food">Food</option>
-              <option value="mixed">Mixed</option>
-            </select>
+            {/* Day 3 */}
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4 space-y-3">
+              <div className="font-bold text-lg">Day 3</div>
+              {itinerary.day3.length === 0 ? (
+                <div className="text-sm text-zinc-200/70">Nothing saved yet.</div>
+              ) : (
+                <ul className="space-y-2">
+                  {itinerary.day3.map((p, idx) => (
+                    <li
+                      key={`${p.placeId || p.name}-${idx}`}
+                      className="text-sm text-zinc-100 border-b border-zinc-800 pb-2 flex items-center justify-between gap-3"
+                    >
+                      <span className="truncate">{p.name}</span>
+                      <button
+                        onClick={() => onRemovePlace(p, "day3")}
+                        className="px-2 py-1 rounded-lg border border-zinc-700 bg-zinc-950/60 text-zinc-200 text-xs hover:text-white"
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
         </div>
 
-        <button
-          onClick={onPlanTrip}
-          disabled={loading}
-          className="px-4 py-2 rounded-xl bg-white text-black font-semibold disabled:opacity-50"
-        >
-          {loading ? "Planning..." : "Plan trip"}
-        </button>
-
-        {/* Show errors (backend, network, etc.) */}
-        {error && (
-          <div className="text-sm text-red-300 border border-red-900/40 bg-red-950/20 rounded-xl p-3">
-            {error}
-          </div>
+        {/* DEBUG OUTPUT */}
+        {result && (
+          <details className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 backdrop-blur-md">
+            <summary className="cursor-pointer font-semibold">
+              Debug: raw API response
+            </summary>
+            <pre className="mt-3 overflow-auto text-sm">
+              {JSON.stringify(result, null, 2)}
+            </pre>
+          </details>
         )}
       </div>
-
-      {/* PLACES LISTS */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        <PlacesSection
-          title="Restaurants"
-          places={restaurants}
-          onSavePlace={onSavePlace} // ✅ pass handler down
-        />
-        <PlacesSection
-          title="Attractions"
-          places={attractions}
-          onSavePlace={onSavePlace} // ✅ pass handler down
-        />
-      </div>
-
-      {/* ITINERARY UI (NEW) */}
-<div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 space-y-4">
-  <div className="flex items-center justify-between">
-    <h2 className="text-2xl font-bold">Your Itinerary</h2>
-    <div className="text-sm text-zinc-400">
-      Saved items:{" "}
-      {itinerary.day1.length + itinerary.day2.length + itinerary.day3.length}
     </div>
   </div>
-
-  <div className="grid md:grid-cols-3 gap-4">
-    {/* Day 1 */}
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 space-y-3">
-      <div className="font-bold text-lg">Day 1</div>
-      {itinerary.day1.length === 0 ? (
-        <div className="text-sm text-zinc-400">Nothing saved yet.</div>
-      ) : (
-        <ul className="space-y-2">
-          {itinerary.day1.map((p, idx) => (
-            <li
-            key={`${p.placeId || p.name}-${idx}`}
-            className="text-sm text-zinc-200 border-b border-zinc-800 pb-2 flex items-center justify-between gap-3"
-          >
-            <span className="truncate">{p.name}</span>
-
-            {/* ✅ NEW remove button */}
-            <button
-              onClick={() => onRemovePlace(p, "day1")}
-              className="px-2 py-1 rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-300 text-xs hover:text-white"
-            >
-              Remove
-            </button>
-          </li>
-
-          ))}
-        </ul>
-      )}
-    </div>
-
-    {/* Day 2 */}
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 space-y-3">
-      <div className="font-bold text-lg">Day 2</div>
-      {itinerary.day2.length === 0 ? (
-        <div className="text-sm text-zinc-400">Nothing saved yet.</div>
-      ) : (
-        <ul className="space-y-2">
-          {itinerary.day2.map((p, idx) => (
-            <li
-            key={`${p.placeId || p.name}-${idx}`}
-            className="text-sm text-zinc-200 border-b border-zinc-800 pb-2 flex items-center justify-between gap-3"
-          >
-            <span className="truncate">{p.name}</span>
-
-            {/* ✅ NEW remove button */}
-            <button
-              onClick={() => onRemovePlace(p, "day2")}
-              className="px-2 py-1 rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-300 text-xs hover:text-white"
-            >
-              Remove
-            </button>
-          </li>
-          ))}
-        </ul>
-      )}
-    </div>
-
-    {/* Day 3 */}
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 space-y-3">
-      <div className="font-bold text-lg">Day 3</div>
-      {itinerary.day3.length === 0 ? (
-        <div className="text-sm text-zinc-400">Nothing saved yet.</div>
-      ) : (
-        <ul className="space-y-2">
-          {itinerary.day3.map((p, idx) => (
-            <li
-            key={`${p.placeId || p.name}-${idx}`}
-            className="text-sm text-zinc-200 border-b border-zinc-800 pb-2 flex items-center justify-between gap-3"
-          >
-            <span className="truncate">{p.name}</span>
-
-            {/* ✅ NEW remove button */}
-            <button
-              onClick={() => onRemovePlace(p, "day3")}
-              className="px-2 py-1 rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-300 text-xs hover:text-white"
-            >
-              Remove
-            </button>
-          </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  </div>
-</div>
-
-
-      {/* DEBUG OUTPUT */}
-      {result && (
-        <details className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5">
-          <summary className="cursor-pointer font-semibold">
-            Debug: raw API response
-          </summary>
-          <pre className="mt-3 overflow-auto text-sm">
-            {JSON.stringify(result, null, 2)}
-          </pre>
-        </details>
-      )}
-    </div>
-  );
+);
 }

@@ -5,6 +5,7 @@ import TripDetailPage from "./pages/TripDetailPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 
+
 /**
  * ProtectedLayout
  * WHY:
@@ -24,36 +25,40 @@ function ProtectedLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6">
-      <div className="max-w-5xl mx-auto space-y-6">
+    <div
+  className="min-h-screen text-zinc-100 bg-cover bg-center"
+  style={{ backgroundImage: "url('/bg.jpg')" }}
+>
+  <div className="min-h-screen bg-black/60 p-6">
+    <div className="max-w-5xl mx-auto space-y-6"></div>
         {/* Navigation (ONLY shows when logged in) */}
-        <nav className="flex items-center gap-3">
+        <nav className="sticky top-0 z-50 flex items-center gap-3">
           <NavLink
-            to="/"
-            end
-            className={({ isActive }) =>
-              `px-4 py-2 rounded-xl border text-sm font-semibold ${
-                isActive
-                  ? "bg-white text-black border-white"
-                  : "bg-zinc-950 text-zinc-100 border-zinc-800"
-              }`
-            }
-          >
-            Planner
-          </NavLink>
+  to="/"
+  end
+  className={({ isActive }) =>
+    `px-4 py-2 rounded-xl border text-sm font-semibold transition ${
+      isActive
+        ? "bg-white text-black border-white"
+        : "bg-zinc-900/70 text-zinc-200 border-zinc-700 hover:bg-zinc-800"
+    }`
+  }
+>
+  Planner
+</NavLink>
 
-          <NavLink
-            to="/trips"
-            className={({ isActive }) =>
-              `px-4 py-2 rounded-xl border text-sm font-semibold ${
-                isActive
-                  ? "bg-white text-black border-white"
-                  : "bg-zinc-950 text-zinc-100 border-zinc-800"
-              }`
-            }
-          >
-            Saved Trips
-          </NavLink>
+<NavLink
+  to="/trips"
+  className={({ isActive }) =>
+    `px-4 py-2 rounded-xl border text-sm font-semibold transition ${
+      isActive
+        ? "bg-white text-black border-white"
+        : "bg-zinc-900/70 text-zinc-200 border-zinc-700 hover:bg-zinc-800"
+    }`
+  }
+>
+  Saved Trips
+</NavLink>
 
           {/* Logout button */}
           <button

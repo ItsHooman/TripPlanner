@@ -201,6 +201,8 @@ app.post("/api/trips/plan", authMiddleware, async (req, res) => {
     // 3) Fetch weather using the coordinates
     const weather = await fetchWeather(geo.latitude, geo.longitude, geo.timezone);
 
+
+
     // 4) Fetch places around the destination
     // We'll grab two “buckets”: restaurants + attractions
     // Geoapify uses category keys in `categories=` :contentReference[oaicite:8]{index=8}
@@ -221,6 +223,13 @@ app.post("/api/trips/plan", authMiddleware, async (req, res) => {
     limit: 12,
     });
 
+    const vibeMatches = await fetchPlaces({
+          lon: geo.longitude,
+          lat: geo.latitude,
+          radiusMeters: 7000, // 7 km
+          categories: getVibeCategories(vibe),
+          limit: 12,
+        });
 
 
     // 5) Build a plan JSON object
@@ -244,6 +253,7 @@ app.post("/api/trips/plan", authMiddleware, async (req, res) => {
         daily: weather,
       },
         places: {
+        vibeMatches,
         restaurants,
         attractions,
       },
@@ -341,7 +351,28 @@ app.get("/api/trips", authMiddleware, async (req, res) => {
   }
 });
 
+function getVibeCategories(vibe) {
+  switch (vibe) {
+    case "techno":
+      // ✅ valid Geoapify category keys:
+      // - adult.nightclub exists in their Supported categories list
+      // - catering.bar exists in their Catering list
+      return "adult.nightclub,catering.bar";
 
+    case "nature":
+      return "leisure.park,natural";
+
+    case "relax":
+      return "leisure.spa,leisure.park";
+
+    case "food":
+      return "catering.restaurant,catering.cafe,catering.fast_food";
+
+    case "mixed":
+    default:
+      return "tourism.attraction,catering.restaurant,catering.cafe";
+  }
+}
 
 
 async function fetchPlaces({ lon, lat, radiusMeters, categories, limit = 10 }) {
@@ -363,9 +394,12 @@ async function fetchPlaces({ lon, lat, radiusMeters, categories, limit = 10 }) {
     `&apiKey=${encodeURIComponent(apiKey)}`;
 
   const resp = await fetch(url);
-  if (!resp.ok) {
-    throw new Error(`Geoapify Places failed with status ${resp.status}`);
-  }
+if (!resp.ok) {
+  const text = await resp.text().catch(() => "");
+  throw new Error(
+    `Geoapify Places failed with status ${resp.status}. URL=${url}. Body=${text}`
+  );
+}
 
   const data = await resp.json();
 

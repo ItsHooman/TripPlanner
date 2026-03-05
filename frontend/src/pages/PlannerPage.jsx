@@ -50,7 +50,7 @@ async function removePlaceFromTrip(tripId, day, place) {
   const token = localStorage.getItem("token"); // change key if yours is different
 
   const res = await fetch(
-    `http://localhost:8090/api/trips/${tripId}/itinerary/remove`,
+  `${API_BASE}/api/trips/${tripId}/itinerary/remove`,
     {
       method: "PATCH",
       headers: {
@@ -199,12 +199,12 @@ function PlaceCard({ place, onSavePlace }) {
 
         {/* ✅ Save button now uses selectedDay */}
         <button
-        type="button"
-        onClick={() => onSavePlace(place, selectedDay)}
-        className="..."
-      >
-        Save
-      </button>
+          type="button"
+          onClick={() => onSavePlace(place, selectedDay)}
+          className="inline-flex items-center justify-center px-3 py-2 rounded-xl border border-zinc-800 bg-zinc-950 text-zinc-100 font-semibold text-sm hover:bg-zinc-900"
+        >
+          Save
+        </button>
 
       </div>
     </div>
@@ -273,6 +273,41 @@ function PlacesSection({ title, places, onSavePlace }) {
     </section>
   );
 }
+
+
+function WeatherBlock({ daily }) {
+  if (!daily?.time?.length) return null;
+
+  return (
+    <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 space-y-3 backdrop-blur-md">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Weather</h2>
+        <div className="text-sm text-zinc-200/70">Daily forecast</div>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-3">
+        {daily.time.slice(0, 7).map((date, i) => (
+          <div
+            key={date}
+            className="rounded-xl border border-zinc-800 bg-zinc-950/70 p-4 flex items-center justify-between"
+          >
+            <div className="text-sm font-semibold">{date}</div>
+
+            <div className="text-sm text-zinc-200/80">
+              {Math.round(daily.tempMin?.[i] ?? 0)}° /{" "}
+              {Math.round(daily.tempMax?.[i] ?? 0)}°
+            </div>
+
+            <div className="text-sm text-zinc-200/80">
+              🌧️ {daily.precipitation?.[i] ?? 0}mm
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 
 /**
  * PlannerPage (PARENT component)
@@ -400,8 +435,11 @@ async function onRemovePlace(place, day) {
 
 
   // Safely read places from result
+  const vibe = result?.planJson?.trip?.vibe;
+  const vibeMatches = result?.planJson?.places?.vibeMatches ?? [];
   const restaurants = result?.planJson?.places?.restaurants ?? [];
   const attractions = result?.planJson?.places?.attractions ?? [];
+  const daily = result?.planJson?.weather?.daily ?? null;
 
 /**
  * itinerary:
@@ -528,11 +566,20 @@ const itinerary = result?.planJson?.itinerary ?? {
           )}
         </div>
 
+        {/* WEATHER */}
+        {result && <WeatherBlock daily={daily} />}
+
         {/* PLACES LISTS */}
-        <div className="grid lg:grid-cols-2 gap-6">
+        <div className="grid lg:grid-cols-3 gap-6">
+        <PlacesSection title="Vibe matches" places={vibeMatches} onSavePlace={onSavePlace} />
+
+        {vibe !== "food" && (
           <PlacesSection title="Restaurants" places={restaurants} onSavePlace={onSavePlace} />
-          <PlacesSection title="Attractions" places={attractions} onSavePlace={onSavePlace} />
-        </div>
+        )}
+
+        <PlacesSection title="Attractions" places={attractions} onSavePlace={onSavePlace} />
+      </div>
+      
 
         {/* ITINERARY UI */}
         <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 space-y-4 backdrop-blur-md">

@@ -52,10 +52,10 @@ export default function TripsListPage() {
         <div className="max-w-5xl mx-auto space-y-6">
           <header className="space-y-2">
             <h1 className="text-3xl font-bold">Saved Trips</h1>
-            <p className="text-zinc-200/80">
+            {/* <p className="text-zinc-200/80">
               This page calls <code className="text-white">/api/trips</code> and
               lists DB results.
-            </p>
+            </p> */}
           </header>
 
           {loading && <div className="text-zinc-200/70">Loading trips...</div>}

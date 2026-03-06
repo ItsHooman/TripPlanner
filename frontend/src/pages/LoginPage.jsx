@@ -68,12 +68,13 @@ export default function LoginPage() {
               save your favorite spots into a day-by-day itinerary.
             </p>
 
-            <ul className="mt-6 space-y-2 text-zinc-200">
-              <li>Discover restaurants & attractions</li>
-              <li>Build Day 1 / Day 2 / Day 3 itinerary</li>
-              <li>Modify them based on your vibe</li>
-              <li>Save and manage your trips</li>
-            </ul>
+            <ul className="mt-6 space-y-3 text-zinc-200">
+            <li>🍜 <span className="ml-1">Discover amazing restaurants & attractions</span></li>
+            <li>🗓️ <span className="ml-1">Plan Day 1 / Day 2 / Day 3 itinerary</span></li>
+            <li>✨ <span className="ml-1">Adjust activities based on your vibe</span></li>
+            <li>🌦️ <span className="ml-1">Check weather and travel distances</span></li>
+            <li>💾 <span className="ml-1">Save and manage your trips</span></li>
+          </ul>
 
             
           </div>

@@ -65,10 +65,10 @@ export default function TripDetailPage() {
                 Back to trips
               </Link>
             </div>
-            <p className="text-zinc-200/80">
+            {/* <p className="text-zinc-200/80">
               This page calls <code className="text-white">/api/trips/:id</code>{" "}
               and renders the stored plan.
-            </p>
+            </p> */}
           </header>
 
           {loading && <div className="text-zinc-200/70">Loading trip...</div>}

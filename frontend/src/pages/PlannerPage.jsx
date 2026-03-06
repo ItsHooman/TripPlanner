@@ -592,9 +592,7 @@ const itinerary = result?.planJson?.itinerary ?? {
       <div className="max-w-7xl mx-auto p-6 space-y-6">
         <header className="space-y-2">
           <h1 className="text-3xl font-bold">Trip Planner</h1>
-          <p className="text-zinc-200/80">
-            Planner page: POST to backend → save trip → render places.
-          </p>
+          
         </header>
 
         {/* FORM CARD */}
@@ -644,10 +642,10 @@ const itinerary = result?.planJson?.itinerary ?? {
                 onChange={onChange}
               />
               {dateError && (
-              <div className="text-red-400 text-sm mt-1">
-                {dateError}
-              </div>
-            )}
+          <div className="text-red-400 text-sm mt-1">
+            {dateError}
+          </div>
+        )}
             </div>
 
             <div className="md:col-span-2">
@@ -669,7 +667,7 @@ const itinerary = result?.planJson?.itinerary ?? {
 
           <button
             onClick={onPlanTrip}
-            disabled={!!dateError}
+            disabled={loading}
             className="px-4 py-2 rounded-xl bg-white text-black font-semibold disabled:opacity-50"
           >
             {loading ? "Planning..." : "Plan trip"}
